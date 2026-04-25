@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOBILE PRO - COMPLETE ERP (Large Font)</title>
+    <style>
+        :root { --sidebar-width: 240px; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --dark: #1a1a1a; }
+        body { font-family: 'Inter', sans-serif; margin: 0; display: flex; background: #f4f7f6; font-size: 16px; /* Font တိုးထားသည် */ }
+        .sidebar { width: var(--sidebar-width); height: 100vh; background: var(--dark); color: white; position: fixed; padding-top: 20px; }
+        .sidebar h2 { text-align: center; color: var(--accent); margin-bottom: 25px; font-size: 24px; }
+        .menu-item { padding: 15px 20px; cursor: pointer; border-left: 5px solid transparent; font-size: 15px; }
+        .menu-item.active { background: #2c3e50; border-left: 5px solid var(--accent); }
+        .main-content { margin-left: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); padding: 30px; box-sizing: border-box; }
+        .page { display: none; } .page.active { display: block; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 25px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 25px; }
+        
+        /* Input & Button Sizes */
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        button { border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        
+        .btn-blue { background: var(--accent); color: white; }
+        .btn-sell { background: var(--success); color: white; }
+        .stat-box { background: var(--dark); color: white; padding: 20px; border-radius: 12px; text-align: center; }
+        .stat-box div { font-size: 22px; font-weight: bold; margin-top: 5px; }
+        .stat-box small { font-size: 13px; color: #aaa; text-transform: uppercase; }
+
+        /* Table Sizes */
+        table { width: 100%; border-collapse: collapse; font-size: 15px; margin-top: 15px; }
+        th, td { text-align: left; padding: 14px; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; color: #555; font-size: 14px; }
+        .edit-input { width: 110px !important; padding: 6px !important; font-size: 14px; border: 1px solid #3498db; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>MOBILE PRO</h2>
+    <div class="menu-item active" onclick="showPage('dashboard')">Inventory / POS</div>
+    <div class="menu-item" onclick="showPage('acc-page')">Mobile Accessories</div>
+    <div class="menu-item" onclick="showPage('service-page')">Mobile Service</div>
+    <div class="menu-item" onclick="showPage('stock-entry')">Stock Entry</div>
+    <div class="menu-item" onclick="showPage('history')">Sales Record</div>
+    <div class="menu-item" onclick="showPage('profit-page')" style="color:#00e676;">Profit Analysis</div>
+</div>
+
+<div class="main-content">
+    
+    <div id="dashboard" class="page active">
+        <h1>Inventory / POS</h1>
+        <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap: 25px;">
+            <div class="card">
+                <input type="text" id="posSearch" placeholder="🔍 Scan IMEI or Barcode..." oninput="renderPOS()">
+                <table>
+                    <thead><tr><th>Item</th><th>Storage</th><th>Colour</th><th>IMEI/Barcode</th><th>Retail</th><th>Action</th></tr></thead>
+                    <tbody id="posBody"></tbody>
+                </table>
+            </div>
+            <div id="checkoutBox" class="card" style="display:none; border:3px solid var(--success);">
+                <h3 style="font-size: 22px;">Confirm Sale</h3>
+                <div id="checkDetails" style="margin-bottom:20px; line-height:1.8; font-size: 17px;"></div>
+                <label>Actual Sold Price:</label>
+                <input type="text" id="finalPrice" onkeyup="liveFormat(this)" style="font-size: 24px; font-weight: bold; color: var(--success);">
+                <button class="btn-sell" style="width:100%;" onclick="processSale()">CONFIRM & PRINT</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="acc-page" class="page">
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+            <button class="btn-blue" onclick="addCat('acc')">+ Category</button>
+            <input type="text" id="accSearch" placeholder="🔍 Search Accessories Details..." style="width:400px;" oninput="renderAccList()">
+        </div>
+        <div class="card">
+            <div class="grid-3">
+                <input type="text" id="acName" placeholder="Item Name">
+                <select id="acCat"></select>
+                <input type="text" id="acColor" placeholder="Colour">
+                <input type="text" id="acCost" placeholder="Cost Price" onkeyup="liveFormat(this)">
+                <input type="text" id="acRetail" placeholder="Retail Price" onkeyup="liveFormat(this)">
+                <input type="text" id="acBarcode" placeholder="Barcode">
+                <input type="number" id="acStock" placeholder="Stock Qty">
+            </div>
+            <button class="btn-blue" style="margin-top:10px;" onclick="saveAcc()">SAVE ACCESSORY</button>
+        </div>
+        <div class="card">
+            <h3>Accessories Stock Details</h3>
+            <table id="accTable">
+                <thead><tr><th>Name</th><th>Cat</th><th>Colour</th><th>Barcode</th><th>Cost</th><th>Retail</th><th>Stock</th><th>Action</th></tr></thead>
+                <tbody id="accBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="service-page" class="page">
+        <h1>Mobile Service</h1>
+        <div class="card">
+            <div class="grid-3">
+                <input type="date" id="svDate">
+                <input type="text" id="svModel" placeholder="Model">
+                <input type="text" id="svColor" placeholder="Colour">
+                <input type="text" id="svError" placeholder="Issue">
+                <input type="text" id="svSpare" placeholder="Spare Cost" onkeyup="liveFormat(this)">
+                <input type="text" id="svPrice" placeholder="Customer Price" onkeyup="liveFormat(this)">
+                <textarea id="svRemark" placeholder="Physical condition remark..." style="grid-column: span 2; height: 100px;"></textarea>
+                <input type="file" id="svPhoto">
+            </div>
+            <button class="btn-blue" style="margin-top:15px;" onclick="saveService()">RECEIVE & PRINT VOUCHER</button>
+        </div>
+        <div class="card">
+            <table>
+                <thead><tr><th>Date</th><th>Model</th><th>Error</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody id="svList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="stock-entry" class="page">
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+            <button class="btn-blue" onclick="addCat('phone')">+ Brand Category</button>
+            <input type="text" id="phSearch" placeholder="🔍 Search Phone Stock..." style="width:400px;" oninput="renderPhoneStock()">
+        </div>
+        <div class="card">
+            <div class="grid-3">
+                <input type="text" id="phModel" placeholder="Model">
+                <select id="phCatSelect"></select>
+                <input type="text" id="phSpecs" placeholder="Storage">
+                <input type="text" id="phColor" placeholder="Colour">
+                <input type="text" id="phCost" placeholder="Cost" onkeyup="liveFormat(this)">
+                <input type="text" id="phRetail" placeholder="Retail" onkeyup="liveFormat(this)">
+            </div>
+            <textarea id="phImeis" placeholder="Scan IMEIs (One per line)..." style="height: 120px;"></textarea>
+            <button class="btn-sell" style="margin-top:10px;" onclick="savePhones()">SAVE ALL PHONES</button>
+        </div>
+        <div class="card">
+            <h3>Phone Stock Details</h3>
+            <table>
+                <thead><tr><th>Model</th><th>Storage/Color</th><th>IMEI</th><th>Cost</th><th>Retail</th><th>Action</th></tr></thead>
+                <tbody id="phoneStockBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="history" class="page">
+        <h1>Sales Record</h1>
+        <div class="card">
+            <table>
+                <thead><tr><th>Time</th><th>Item Name</th><th>Model & Spec</th><th>Colour</th><th>IMEI/Barcode</th><th>Sold Amount</th></tr></thead>
+                <tbody id="salesBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="profit-page" class="page">
+        <h1>Profit Analysis</h1>
+        <div class="grid-5">
+            <div class="stat-box" style="background:var(--success);"><small>Net Profits</small><div id="netP">0</div></div>
+            <div class="stat-box"><small>Mobile Profits</small><div id="mobP">0</div></div>
+            <div class="stat-box"><small>Acc Profits</small><div id="accP">0</div></div>
+            <div class="stat-box"><small>Service Profits</small><div id="svP">0</div></div>
+            <div class="stat-box" style="background:var(--danger);"><small>Total Dis</small><div id="totD">0</div></div>
+        </div>
+        <div class="card">
+            <button class="btn-blue" style="width:auto; margin-bottom:20px;">Financial Details</button>
+            <table>
+                <thead><tr><th>Model & Spec</th><th>IMEI/Barcode</th><th>Cost</th><th>Retail</th><th>Sold</th><th>Dis</th><th>Profits</th></tr></thead>
+                <tbody id="profitTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Database logic starts here
+    let db = JSON.parse(localStorage.getItem('mob_erp_v11')) || { phones: [], acc: [], services: [], sales: [], pCats: ["iPhone","Samsung"], aCats: ["Battery","Casing"] };
+    let curItem = null;
+
+    function f(n) { return Number(n).toLocaleString(); }
+    function n(s) { return Number(String(s).replace(/,/g, '')) || 0; }
+    function liveFormat(el) {
+        let val = el.value.replace(/,/g, '');
+        if(!isNaN(val) && val !== "") el.value = Number(val).toLocaleString();
+    }
+
+    function showPage(p) {
+        document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
+        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+        document.getElementById(p).classList.add('active');
+        event.currentTarget.classList.add('active');
+        refresh();
+    }
+
+    function savePhones() {
+        const imeis = document.getElementById('phImeis').value.split('\n').filter(i => i.trim());
+        imeis.forEach(i => {
+            db.phones.push({ id: Date.now()+Math.random(), type:'phone', model: document.getElementById('phModel').value, cat: document.getElementById('phCatSelect').value, specs: document.getElementById('phSpecs').value, color: document.getElementById('phColor').value, imei: i.trim(), cost: n(document.getElementById('phCost').value), retail: n(document.getElementById('phRetail').value), status: 'instock' });
+        });
+        save(); alert("Saved!"); document.getElementById('phImeis').value=""; refresh();
+    }
+
+    function saveAcc() {
+        db.acc.push({ id: Date.now(), type:'acc', name: document.getElementById('acName').value, cat: document.getElementById('acCat').value, color: document.getElementById('acColor').value, cost: n(document.getElementById('acCost').value), retail: n(document.getElementById('acRetail').value), barcode: document.getElementById('acBarcode').value, stock: n(document.getElementById('acStock').value) });
+        save(); alert("Saved!"); refresh();
+    }
+
+    function saveService() {
+        db.services.push({ id: Date.now(), date: document.getElementById('svDate').value, model: document.getElementById('svModel').value, color: document.getElementById('svColor').value, error: document.getElementById('svError').value, spare: n(document.getElementById('svSpare').value), price: n(document.getElementById('svPrice').value), status: 'No' });
+        save(); alert("Service Saved!"); refresh();
+    }
+
+    function updateItem(type, id, field, val) {
+        let list = type === 'phone' ? db.phones : db.acc;
+        let itm = list.find(x => x.id === id);
+        itm[field] = (field === 'cost' || field === 'retail' || field === 'stock') ? n(val) : val;
+        save();
+    }
+
+    function delItm(type, id) {
+        if(confirm("Delete this?")) {
+            if(type === 'phone') db.phones = db.phones.filter(p => p.id !== id);
+            else db.acc = db.acc.filter(a => a.id !== id);
+            save(); refresh();
+        }
+    }
+
+    function renderPOS() {
+        const q = document.getElementById('posSearch').value.toLowerCase();
+        const body = document.getElementById('posBody'); body.innerHTML = '';
+        db.phones.filter(p => p.status === 'instock' && (p.model.toLowerCase().includes(q) || p.imei.includes(q))).forEach(p => {
+            body.innerHTML += `<tr><td>${p.model}</td><td>${p.specs}</td><td>${p.color}</td><td>${p.imei}</td><td>${f(p.retail)}</td><td><button class="btn-sell" onclick="prepSale('phone', ${p.id})">Sell</button></td></tr>`;
+        });
+        db.acc.filter(a => a.stock > 0 && (a.name.toLowerCase().includes(q) || a.barcode.includes(q))).forEach(a => {
+            body.innerHTML += `<tr><td>${a.name}</td><td>${a.cat}</td><td>${a.color}</td><td>${a.barcode}</td><td>${f(a.retail)}</td><td><button class="btn-sell" onclick="prepSale('acc', ${a.id})">Sell</button></td></tr>`;
+        });
+    }
+
+    function prepSale(type, id) {
+        curItem = type === 'phone' ? db.phones.find(p => p.id === id) : db.acc.find(a => a.id === id);
+        document.getElementById('checkoutBox').style.display = 'block';
+        document.getElementById('checkDetails').innerHTML = `<b>Item:</b> ${curItem.model || curItem.name}<br><b>IMEI/BC:</b> ${curItem.imei || curItem.barcode}<br><b>Price:</b> ${f(curItem.retail)}`;
+        document.getElementById('finalPrice').value = f(curItem.retail);
+    }
+
+    function processSale() {
+        const sp = n(document.getElementById('finalPrice').value);
+        const sale = { ...curItem, soldPrice: sp, time: new Date().toLocaleString() };
+        db.sales.push(sale);
+        if(curItem.type === 'phone') db.phones.find(p => p.id === curItem.id).status = 'sold';
+        else db.acc.find(a => a.id === curItem.id).stock -= 1;
+        save(); alert("Sale Confirmed!"); document.getElementById('checkoutBox').style.display = 'none'; refresh();
+    }
+
+    function toggleSv(id) {
+        let s = db.services.find(x => x.id === id);
+        s.status = s.status === 'No' ? 'Done' : 'No';
+        save(); refresh();
+    }
+
+    function refresh() {
+        // Stock Tables Render
+        const pStock = document.getElementById('phoneStockBody'); pStock.innerHTML = '';
+        const qPh = document.getElementById('phSearch').value.toLowerCase();
+        db.phones.filter(p => p.status === 'instock' && (p.model.toLowerCase().includes(qPh) || p.imei.includes(qPh))).forEach(p => {
+            pStock.innerHTML += `<tr><td>${p.model}</td><td>${p.specs}/${p.color}</td><td>${p.imei}</td><td><input class="edit-input" value="${f(p.cost)}" onchange="updateItem('phone', ${p.id}, 'cost', this.value)"></td><td><input class="edit-input" value="${f(p.retail)}" onchange="updateItem('phone', ${p.id}, 'retail', this.value)"></td><td><button onclick="delItm('phone', ${p.id})" style="color:red;">Del</button></td></tr>`;
+        });
+
+        const aStock = document.getElementById('accBody'); aStock.innerHTML = '';
+        const qAcc = document.getElementById('accSearch').value.toLowerCase();
+        db.acc.filter(a => a.name.toLowerCase().includes(qAcc) || a.barcode.includes(qAcc)).forEach(a => {
+            aStock.innerHTML += `<tr><td>${a.name}</td><td>${a.cat}</td><td>${a.color}</td><td>${a.barcode}</td><td><input class="edit-input" value="${f(a.cost)}" onchange="updateItem('acc', ${a.id}, 'cost', this.value)"></td><td><input class="edit-input" value="${f(a.retail)}" onchange="updateItem('acc', ${a.id}, 'retail', this.value)"></td><td><input class="edit-input" style="width:60px !important" value="${a.stock}" onchange="updateItem('acc', ${a.id}, 'stock', this.value)"></td><td><button onclick="delItm('acc', ${a.id})" style="color:red;">Del</button></td></tr>`;
+        });
+
+        const svBody = document.getElementById('svList'); svBody.innerHTML = '';
+        db.services.forEach(s => {
+            svBody.innerHTML += `<tr><td>${s.date}</td><td>${s.model}</td><td>${s.error}</td><td style="color:${s.status==='Done'?'green':'red'}"><b>${s.status}</b></td><td><button onclick="toggleSv(${s.id})">Update Status</button></td></tr>`;
+        });
+
+        const sRecord = document.getElementById('salesBody'); sRecord.innerHTML = '';
+        db.sales.forEach(s => {
+            sRecord.innerHTML += `<tr><td>${s.time}</td><td>${s.type==='phone'?'Mobile':s.name}</td><td>${s.type==='phone'?s.specs:s.cat}</td><td>${s.color}</td><td>${s.imei || s.barcode}</td><td>${f(s.soldPrice)}</td></tr>`;
+        });
+
+        updateProfits();
+        renderPOS();
+    }
+
+    function updateProfits() {
+        let nP = 0, mP = 0, aP = 0, sP = 0, tD = 0;
+        const body = document.getElementById('profitTableBody'); body.innerHTML = '';
+        db.sales.forEach(s => {
+            let dis = s.retail - s.soldPrice; let prof = s.soldPrice - s.cost;
+            tD += dis; nP += prof; if(s.type==='phone') mP += prof; else aP += prof;
+            body.innerHTML += `<tr><td>${s.model || s.cat}</td><td>${s.imei || s.barcode}</td><td>${f(s.cost)}</td><td>${f(s.retail)}</td><td>${f(s.soldPrice)}</td><td>${f(dis)}</td><td>${f(prof)}</td></tr>`;
+        });
+        db.services.filter(s => s.status === 'Done').forEach(s => {
+            let prof = s.price - s.spare; sP += prof; nP += prof;
+            body.innerHTML += `<tr><td>Service: ${s.model}</td><td>-</td><td>${f(s.spare)}</td><td>${f(s.price)}</td><td>${f(s.price)}</td><td>0</td><td>${f(prof)}</td></tr>`;
+        });
+        document.getElementById('netP').innerText = f(nP);
+        document.getElementById('mobP').innerText = f(mP);
+        document.getElementById('accP').innerText = f(aP);
+        document.getElementById('svP').innerText = f(sP);
+        document.getElementById('totD').innerText = f(tD);
+    }
+
+    function addCat(type) {
+        let c = prompt("New Category:");
+        if(c) { if(type==='phone') db.pCats.push(c); else db.aCats.push(c); save(); updateDrops(); }
+    }
+    function updateDrops() {
+        document.getElementById('phCatSelect').innerHTML = db.pCats.map(c => `<option value="${c}">${c}</option>`).join('');
+        document.getElementById('acCat').innerHTML = db.aCats.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+    function save() { localStorage.setItem('mob_erp_v11', JSON.stringify(db)); }
+    updateDrops(); refresh();
+</script>
+</body>
+</html>
